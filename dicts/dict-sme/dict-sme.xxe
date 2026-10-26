@@ -9,10 +9,12 @@
     <detect>
         <and>
             <rootElementLocalName>r</rootElementLocalName>
-            <rootElementAttribute localName="id" value="dict-sme"/>
+            <rootElementAttribute localName="id" value="dict-sme" />
         </and>
     </detect>
-    <css name="Editing view" location="dict-sme.css"/>
-    <include location="../../core/dict.incl"/>
-    <include location="../../core/dict-batches.incl"/>
+
+    <css name="Editing view" location="dict-sme.css" />
+
+    <include location="../../core/dict.incl" />
+    <include location="../../core/dict-batches.incl" />
 </configuration>

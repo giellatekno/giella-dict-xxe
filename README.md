@@ -2,8 +2,8 @@
 
 An add-on for [XMLmind XML Editor](https://www.xmlmind.com/xmleditor/) (XXE)
 for editing the dictionaries in `giellalt/dict-sme` and `giellalt/dict-sma`
-(more dicts can be added later):
-a style sheet with buttons, a Dictionary menu with keyboard shortcuts,
+(more dicts can be added later).
+Includes a style sheet with buttons, a Dictionary menu with keyboard shortcuts,
 links between entries, and batches with PDFs for proofreading.
 
 One add-on serves all the dictionaries. XXE picks the configuration of a
@@ -27,24 +27,6 @@ dicts/       a folder for each dictionary, dict-xxx/ with
 scripts/     Python scripts, run by the menu in xxe
 make_config.py   generates .xxe and .css files from the tomls in dicts/dict-xxx/
 ```
-
-
-## The scripts
-
-The scripts work on the dictionary repository they are run in (the
-current folder or one above it with `src/*.xml`), so run them from there:
-
-```sh
-cd ~/PATH/TO/dict-sme
-python3 ~/PATH/TO/giella-dict-xxe/scripts/batch.py -h
-python3 ~/PATH/TO/giella-dict-xxe/scripts/check_links.py
-```
-
-The menu runs them the same way, in the repository of the open file.
-Their lists for XXE are written in `.xxe/` in the dictionary repository,
-which should be in its `.gitignore`. Sorting follows the alphabet of the
-language of the dictionary (`xml:lang` of its files), in
-`scripts/alphabet.py`.
 
 ## A new dictionary
 
