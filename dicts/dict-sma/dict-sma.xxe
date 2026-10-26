@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XMLmind XML Editor (XXE) configuration for dict-sma.
+  Made by make_config.py from dict-sma.toml: change that file and run make_config.py, do not edit this one.
+-->
+<configuration name="dict-sma" xmlns="http://www.xmlmind.com/xmleditor/schema/configuration"
+    xmlns:cfg="http://www.xmlmind.com/xmleditor/schema/configuration">
+    <!-- active for the files with the root element <r id="dict-sma"> -->
+    <detect>
+        <and>
+            <rootElementLocalName>r</rootElementLocalName>
+            <rootElementAttribute localName="id" value="dict-sma" />
+        </and>
+    </detect>
+
+    <css name="Editing view" location="dict-sma.css" />
+
+    <include location="../../core/dict.incl" />
+</configuration>

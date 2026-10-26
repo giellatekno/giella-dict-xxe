@@ -1,0 +1,26 @@
+# South Sámi dictionary (giellalt/dict-sma). make_config.py makes
+# dict-sma.xxe and dict-sma.css from this file.
+
+# the id of the root element of the files: <r id="dict-sma">
+id = "dict-sma"
+
+# no batches (yet)
+batches = false
+
+# the pos values offered, in this order; as in schema/dict-sma.rnc
+pos = ["A", "N", "V", "Adv", "Po", "Pr", "Pron", "Phrase", "Interj",
+       "Pcle", "Num", "CC", "CS"]
+
+homographs = 4
+
+[types]
+N = ["Prop", "Coll"]
+A = ["Ord"]
+V = ["TV", "IV"]
+Pron = ["Pers", "Dem", "Indef", "Interr", "Recipr", "Refl", "Rel", "Logo"]
+
+# other attributes of a lemma (<l>), shown on the lemma line like type
+# and homograph: the values offered, and the pos it goes with (leave
+# out pos for all of them, or write just the list of values)
+[lemma_attributes]
+class = { pos = ["V"], values = ["I", "II", "III", "IV", "V", "VI", "xxx"] }
