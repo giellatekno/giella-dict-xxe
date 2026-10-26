@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XMLmind XML Editor (XXE) configuration shared by all the dictionaries
+  (dict-sme, dict-sma, ...): templates for new elements, the commands of
+  the "Dictionary" menu and its keyboard shortcuts. Included by the
+  configuration of each dictionary (dicts/dict-*/dict-*.xxe), which adds its
+  style sheet; batches are added by dict-batches.incl.
+
+  Useful variables to know:
+  %P: path to folder of opened file
+  %d: path to opened file
+  %R: name of opened file
+
+  The lists the menu uses (refs.txt, goto.txt, targets.xml) are made by
+  make_refs.py in the scripts of the add-on, which the menu runs when they
+  are out of date. They are written in .xxe/ in the repository of the
+  dictionary.
+-->
+<configuration xmlns="http://www.xmlmind.com/xmleditor/schema/configuration"
+    xmlns:cfg="http://www.xmlmind.com/xmleditor/schema/configuration">
+
+    <!-- config shared with batches.xxe -->
+    <include location="common.incl" />
+
+    <!-- Template for a new e node. Used automatically every time
+    a new e node is added. The pos is set by dict.addEntry. -->
+    <elementTemplate name="newEntry" selectable="override">
+        <e xmlns="">
+            <lg>
+                <l>lemma</l>
+            </lg>
+            <dg id="a">
+                <d>definition</d>
+            </dg>
+        </e>
+    </elementTemplate>
+
+
+    <!-- ########## -->
+    <!--  COMMANDS  -->
+    <!-- ########## -->
+
+    <!-- Add an entry after the selected one. pos is set based on filename.
+       (N_sme.xml -> N, Pron_Dem_sme.xml -> Pron). -->
+    <command name="dict.addEntry">
+        <macro label="Add entry" undoable="true">
+            <sequence>
+                <!-- select and store the current e node -->
+                <command name="selectNode" parameter="ancestorOrSelf[implicitElement] e" />
+                <set variable="cur" context="$selected" expression="." />
+                <!-- insert a new e node after -->
+                <command name="insert" parameter="after e" />
+                <!-- select the lg of the new e node -->
+                <set variable="selected" expression="$cur/following-sibling::e[1]/lg" />
+                <!-- get the substring before the first "_" of the filename -->
+                <get expression="substring-before('%R', '_')" />
+                <!-- set the pos attribute on the lg -->
+                <command name="putAttribute" parameter="pos %_" />
+                <!-- select the placeholder text of the lemma -->
+                <set variable="selected" expression="$old/following-sibling::e[1]/lg/l/text()" />
+                <command name="selectTo" parameter="textNodeEnd" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Add a definition group after the selected element and give it an id
+       after the highest id in its entry (a, b -> c; a, c -> d). -->
+    <command name="dict.addDg">
+        <macro label="Add definition group" undoable="true">
+            <sequence>
+                <!-- add a new dg and select it -->
+                <command name="insert" parameter="after dg" />
+                <command name="selectNode" parameter="ancestorOrSelf[implicitElement] dg" />
+                <!-- This code feels illegal, but hey, if it works... -->
+                <!-- finds all dg ids, sorts them alphabetically, finds the last letter used,
+                picks the letter after that as new dg id-->
+                <get context="$selected"
+                    expression="
+                     substring(
+                        substring-after(
+                            'abcdefghijklmnopqrstuvwxyz',
+                            substring(
+                                translate(
+                                    'abcdefghijklmnopqrstuvwxyz',
+                                    translate(
+                                        'abcdefghijklmnopqrstuvwxyz',
+                                        join(../dg/@id, ''), ''
+                                    ), ''
+                                ),
+                                string-length(
+                                    translate(
+                                        'abcdefghijklmnopqrstuvwxyz',
+                                        translate(
+                                            'abcdefghijklmnopqrstuvwxyz',
+                                            join(../dg/@id, ''), ''
+                                        ), ''
+                                    )
+                                ), 1
+                            )
+                        ), 1, 1
+                     )" />
+                <command name="putAttribute" parameter="id %_" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Add a new definition. If in a dg, add a new dg. If in a ig, add a new idg. -->
+    <command name="dict.newDefinition">
+        <macro label="New definition group" undoable="true">
+            <!-- do the first that passes the test -->
+            <choice>
+                <sequence>
+                    <!-- in an idiom: a new definition of the idiom -->
+                    <test expression="($selected | $dot)/ancestor-or-self::idg" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::idg))[1]"
+                        variable="selected" />
+                    <command name="insert" parameter="after idg" />
+                </sequence>
+                <sequence>
+                    <test expression="($selected | $dot)/ancestor-or-self::ig" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::ig))[1]/*[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after idg" />
+                </sequence>
+                <sequence>
+                    <!-- in a dg: a new dg after it, with the next id -->
+                    <test expression="($selected | $dot)/ancestor-or-self::dg" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::dg))[1]"
+                        variable="selected" />
+                    <command name="dict.addDg" />
+                </sequence>
+                <sequence>
+                    <!-- elsewhere in an entry: after its last dg, or its lg -->
+                    <test expression="($selected | $dot)/ancestor-or-self::e" />
+                    <set
+                        expression="((($selected | $dot)/ancestor-or-self::e))[1]/*[self::lg or self::dg][last()]"
+                        variable="selected" />
+                    <command name="dict.addDg" />
+                </sequence>
+                <command name="alert" parameter="Put the caret in an entry first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Add a new synonym or antonym (arg %0 = syn or ant) in the selected dg.
+       Synonyms and antonyms are links (d_ref), so a list to pick from is opened. -->
+    <command name="dict.newRelated">
+        <macro label="New synonym or antonym" undoable="true">
+            <!-- do the first that doesn't fail -->
+            <choice>
+                <sequence>
+                    <!-- if dg has a syng/antg: add a new d_ref to it -->
+                    <test expression="($selected | $dot)/ancestor-or-self::dg/%0g" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::dg)[1]/%0g/d_ref)[last()]"
+                        variable="selected" />
+                    <command name="dict.addRelated" />
+                </sequence>
+                <sequence>
+                    <!-- if dg has no syng/antg: create a group and add the first d_ref -->
+                    <test expression="($selected | $dot)/ancestor-or-self::dg" />
+                    <set
+                        expression="(($selected | $dot)/ancestor-or-self::dg)[1]/*[self::d or (self::syng and '%0' = 'ant')][last()]"
+                        variable="selected" />
+                    <command name="dict.addRelatedGroup" parameter="%0g" />
+                </sequence>
+                <command name="alert" parameter="Put the caret in a definition group first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Add a new element of the same kind after the one the caret is in. -->
+    <command name="dict.newSame">
+        <macro label="New one after" undoable="true">
+            <choice>
+                <sequence>
+                    <test
+                        expression="($selected | $dot)/ancestor-or-self::*[self::l or self::d or self::d_ref[parent::syng or parent::antg] or self::x or self::i or self::id or self::ix or self::c]" />
+                    <set
+                        expression="(($selected | $dot)/ancestor-or-self::*[self::l or self::d or self::d_ref[parent::syng or parent::antg] or self::x or self::i or self::id or self::ix or self::c])[last()]"
+                        variable="here" />
+                    <set expression="$here" variable="selected" />
+                    <choice>
+                        <sequence>
+                            <!-- add a new synonym/antonym (opens a list for linking) -->
+                            <test expression="$here[self::d_ref]" />
+                            <command name="dict.addRelated" />
+                        </sequence>
+                        <sequence>
+                            <!-- add a new ig or new idg -->
+                            <test expression="$here[self::i or self::id]" />
+                            <set expression="$here/.." variable="selected" />
+                            <get expression="local-name($here/..)" />
+                            <command name="insert" parameter="after %_" />
+                        </sequence>
+                        <sequence>
+                            <!-- add a new of the same (l, d, x, ix, c)-->
+                            <get expression="local-name($here)" />
+                            <command name="insert" parameter="after %_" />
+                        </sequence>
+                    </choice>
+                </sequence>
+                <command name="alert"
+                    parameter="Put the caret in a lemma, definition, synonym, antonym, example, idiom or comment first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Move an element up or down (arg %0 = up or down). Moves the selected
+         element, or else the innermost element at the caret that has a
+         sibling of the same kind -->
+    <command name="dict.move">
+        <macro label="Move" undoable="true">
+            <sequence>
+                <choice>
+                    <!-- if user has selected a specific element (ctrl + up/down) -->
+                    <sequence>
+                        <test expression="$selected[self::*]" />
+                        <set expression="$selected[self::*][1]" variable="m" />
+                    </sequence>
+                    <!-- else: from the caret, find the first ancestor with multiple elements -->
+                    <sequence>
+                        <test
+                            expression="$dot/ancestor-or-self::*[
+                                 (self::l and ../l[2])
+                                 or (self::d and ../d[2])
+                                 or (self::dg and ../dg[2])
+                                 or (self::d_ref[parent::syng or parent::antg] and ../d_ref[2])
+                                 or (self::xg and ../xg[2])
+                                 or (self::x and ../x[2])
+                                 or (self::ig and ../ig[2])
+                                 or (self::idg and ../idg[2])
+                                 or (self::ix and ../ix[2])
+                                 or (self::c and ../c[2])
+                             ]" />
+                        <set
+                            expression="($dot/ancestor-or-self::*[
+                                 (self::l and ../l[2])
+                                 or (self::d and ../d[2])
+                                 or (self::dg and ../dg[2])
+                                 or (self::d_ref[parent::syng or parent::antg] and ../d_ref[2])
+                                 or (self::xg and ../xg[2])
+                                 or (self::x and ../x[2])
+                                 or (self::ig and ../ig[2])
+                                 or (self::idg and ../idg[2])
+                                 or (self::ix and ../ix[2])
+                                 or (self::c and ../c[2])
+                             ])[last()]"
+                            variable="m" />
+                    </sequence>
+                </choice>
+                <!-- checks first if element can be moved, then move up or down -->
+                <choice>
+                    <sequence>
+                        <test
+                            expression="'%0' = 'up' and $m/preceding-sibling::*[1][local-name() = local-name($m)]" />
+                        <set expression="$m" variable="selected" />
+                        <command name="moveElement" parameter="up" />
+                    </sequence>
+                    <sequence>
+                        <test
+                            expression="'%0' = 'down' and $m/following-sibling::*[1][local-name() = local-name($m)]" />
+                        <set expression="$m" variable="selected" />
+                        <command name="moveElement" parameter="down" />
+                    </sequence>
+                </choice>
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Add a new example sentence. If in a dg, add a xg/x. If in a ig, add a idg/ix -->
+    <command name="dict.newExample">
+        <macro label="New example" undoable="true">
+            <choice>
+                <sequence>
+                    <!-- Currently in a dg/xg/x element -->
+                    <test expression="($selected | $dot)/ancestor-or-self::x" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::x))[1]"
+                        variable="selected" />
+                    <command name="insert" parameter="after x" />
+                </sequence>
+                <sequence>
+                    <!-- elsewhere in a dg that has a xg with x elements -->
+                    <test expression="($selected | $dot)/ancestor-or-self::dg/xg" />
+                    <set
+                        expression="((($selected | $dot)/ancestor-or-self::dg))[1]/xg[last()]/x[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after x" />
+                </sequence>
+                <sequence>
+                    <!-- in a dg without examples, add a new xg -->
+                    <test expression="($selected | $dot)/ancestor-or-self::dg" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::dg))[1]/*[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after xg" />
+                </sequence>
+                <sequence>
+                    <!-- in a ig/idg/ix -->
+                    <test expression="($selected | $dot)/ancestor-or-self::ix" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::ix))[1]"
+                        variable="selected" />
+                    <command name="insert" parameter="after ix" />
+                </sequence>
+                <sequence>
+                    <!-- in a ig/idg -->
+                    <test expression="($selected | $dot)/ancestor-or-self::idg" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::idg))[1]/*[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after ix" />
+                </sequence>
+                <command name="alert"
+                    parameter="Put the caret in a definition group or a definition of an idiom first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Add a new idiom group -->
+    <command name="dict.newIdiom">
+        <macro label="New idiom" undoable="true">
+            <choice>
+                <sequence>
+                    <!-- if in a ig, add a new one after -->
+                    <test expression="($selected | $dot)/ancestor-or-self::ig" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::ig))[1]"
+                        variable="selected" />
+                    <command name="insert" parameter="after ig" />
+                </sequence>
+                <sequence>
+                    <!-- if standing elsewhere, add a new ig after everything except the comments,
+                    if any -->
+                    <test expression="($selected | $dot)/ancestor-or-self::e" />
+                    <set
+                        expression="((($selected | $dot)/ancestor-or-self::e))[1]/*[not(self::cg)][last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after ig" />
+                </sequence>
+                <command name="alert" parameter="Put the caret in an entry first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Add a new comment -->
+    <command name="dict.newComment">
+        <macro label="New comment" undoable="true">
+            <choice>
+                <sequence>
+                    <!-- if in a cg/c -->
+                    <test expression="($selected | $dot)/ancestor-or-self::c" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::c))[1]"
+                        variable="selected" />
+                    <command name="insert" parameter="after c" />
+                </sequence>
+                <sequence>
+                    <!-- if elsewhere and comments exists -->
+                    <test expression="($selected | $dot)/ancestor-or-self::e/cg" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::e))[1]/cg/c[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after c" />
+                </sequence>
+                <sequence>
+                    <!-- if no comments yet, create the group -->
+                    <test expression="($selected | $dot)/ancestor-or-self::e" />
+                    <set expression="((($selected | $dot)/ancestor-or-self::e))[1]/*[last()]"
+                        variable="selected" />
+                    <command name="insert" parameter="after cg" />
+                </sequence>
+                <command name="alert" parameter="Put the caret in an entry first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- ####################### -->
+    <!--  COMMANDS USING PYTHON  -->
+    <!-- ####################### -->
+
+
+    <!-- Let the user pick an entry or a definition group from refs.txt.
+       Returns the <d_ref> pointing to it, as XML. -->
+    <command name="dict.pickRef">
+        <macro>
+            <sequence>
+                <command name="dict.updateLists" />
+                <get expression="resolve-uri('../.xxe/refs.txt', '%d')" />
+                <command name="pick" parameter="'Link to' true @ '%_' UTF-8" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Insert a <d_ref> at the caret, which must be in a <d>. The text of
+       the d_ref is the lemma; change it to the form used in the sentence
+       afterwards. -->
+    <command name="dict.insertReference">
+        <macro label="Insert reference" undoable="true">
+            <choice>
+                <sequence>
+                    <test expression="$dot/ancestor-or-self::d" />
+                    <command name="dict.pickRef" />
+                    <command name="paste" parameter="into %_" />
+                </sequence>
+                <command name="alert" parameter="Put the caret in a definition text first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Add a synonym or antonym after the selected one.
+       Makes you pick a d_ref and pastes it. -->
+    <command name="dict.addRelated">
+        <macro label="Add synonym or antonym" undoable="true">
+            <sequence>
+                <command name="dict.pickRef" />
+                <command name="paste" parameter="after %_" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Add the first synonym or antonym (creates the syng or antg)
+       arg %0 is syng or antg. -->
+    <command name="dict.addRelatedGroup">
+        <macro label="Add synonyms or antonyms" undoable="true">
+            <sequence>
+                <command name="dict.pickRef" />
+                <set expression="%_" plainString="true" variable="picked" />
+                <get
+                    expression="concat(
+                         '&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;%0&gt;',
+                         substring-after($picked, '?&gt;'),
+                         '&lt;/%0&gt;'
+                     )" />
+                <command name="paste" parameter="after %_" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Navigate to an entry or definition group in any file. Opens the file if not yet opened.
+       %0 = filename
+       %1 = nr of target <e> in file
+       %2 = nr of target <dg> in <e>, 0 if target is the whole <e> -->
+    <command name="dict.goTo">
+        <macro>
+            <choice>
+                <!-- if we are jumping inside the currently opened file -->
+                <sequence>
+                    <test
+                        expression="substring('%d', string-length('%d') - string-length('/%0') + 1) = '/%0'" />
+                    <!-- selects the last element. we jump from the bottom of the file, so the
+                       element jumped to alway ends up at the top of the view -->
+                    <get expression="count(/*/*)" />
+                    <set expression="/*/*[%_]" variable="selected" />
+                    <choice>
+                        <!-- select the e element -->
+                        <sequence>
+                            <test expression="'%2' = '0'" />
+                            <set expression="/*/*[%1]" variable="selected" />
+                        </sequence>
+                        <!-- select a dg element -->
+                        <set expression="/*/*[%1]/*[%2]" variable="selected" />
+                    </choice>
+                    <!-- put the caret at the start of the selected elements first text -->
+                    <choice>
+                        <sequence>
+                            <test expression="$selected//text()[normalize-space()]" />
+                            <set expression="($selected//text()[normalize-space()])[1]"
+                                variable="dot" />
+                            <command name="cancelSelection" />
+                        </sequence>
+                        <get expression="''" />
+                    </choice>
+                </sequence>
+                <!-- if we are jumping to another file -->
+                <sequence>
+                    <!-- constructs a XPointer path to open a file at a specific element -->
+                    <!-- includes a hacky way to get a if statment in xpath
+                       (substring from 1 to 99 or 1 to 0) -->
+                    <!-- e.g. /path/to/src/N_sme.xml#element(/1/%1/%2) -->
+                    <get
+                        expression="concat(
+                            resolve-uri('%0', '%d'),
+                            '#element(/1/%1',
+                            substring(concat('/', '%2'), 1, 99 * number('%2' != '0')),
+                            ')'
+                         )" />
+                    <command name="XXE.edit" parameter="%_" />
+                </sequence>
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Go to the entry or definition group the link at the caret points to.
+       Works in definitions, synonyms and antonyms. -->
+    <command name="dict.followLink">
+        <macro label="Follow link">
+            <choice>
+                <sequence>
+                    <!-- check that we are in a d_ref -->
+                    <test expression="($selected | $dot)/ancestor-or-self::d_ref" />
+                    <set expression="(($selected | $dot)/ancestor-or-self::d_ref)[1]"
+                        variable="link" />
+                    <command name="dict.updateLists" />
+
+                    <!-- look up where this link links to -->
+                    <get expression="concat('%d ', count($link/preceding::d_ref) + 1)" />
+                    <command name="dict.python" parameter="find_target.py %_" />
+                    <set expression="%_" plainString="true" variable="found" />
+                    <choice>
+                        <!-- python script returned no error -->
+                        <sequence>
+                            <test expression="not(starts-with(normalize-space($found), '!'))" />
+                            <get expression="normalize-space($found)" />
+                            <!-- script returns params for goTo command -->
+                            <command name="dict.goTo" parameter="%_" />
+                        </sequence>
+                        <!-- python script returned error -->
+                        <sequence>
+                            <get expression="substring-after($found, '!')" />
+                            <command name="alert" parameter="[WARNING]%_" />
+                        </sequence>
+                    </choice>
+                </sequence>
+                <command name="alert" parameter="Put the caret in a link first." />
+            </choice>
+        </macro>
+    </command>
+
+    <!-- Shows the linkMenu when right-clicking a d_ref -->
+    <command name="{$c contextualMenuItems}linkMenuItems">
+        <macro>
+            <sequence>
+                <test expression="$clickedElement/ancestor-or-self::d_ref" />
+                <!-- select the clicked link, which Follow link then uses -->
+                <set expression="$clickedElement/ancestor-or-self::d_ref[1]"
+                    variable="selected" />
+                <command name="dict.linkMenu" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Menu option called by the command above.
+       Seperate because macro cant include a menu. -->
+    <command name="dict.linkMenu">
+        <menu>
+            <item command="dict.followLink" label="Follow link" />
+        </menu>
+    </command>
+
+    <!-- Pick an entry from goto.txt, in any file, and go to it. -->
+    <command name="dict.jumpToEntry">
+        <macro label="Jump to entry">
+            <sequence>
+                <command name="dict.updateLists" />
+                <get expression="resolve-uri('../.xxe/goto.txt', '%d')" />
+                <command name="pick" parameter="'Jump to' true @ '%_' UTF-8" />
+                <command name="dict.goTo" parameter="%_" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- ############################# -->
+    <!--  MENU AND KEYBOARD SHORTCUTS  -->
+    <!-- ############################# -->
+
+    <!-- The items have names where other files add items (insert="...").
+         On Windows/Linux: mod = ctrl, alt = alt -->
+    <!-- On Mac: mod = Command, alt = Option -->
+    <menu label="_Dictionary">
+        <item command="dict.insertReference" label="Insert _reference">
+            <accelerator code="R" modifiers="mod alt" />
+        </item>
+        <item command="dict.followLink" label="_Follow link">
+            <accelerator code="L" modifiers="mod alt" />
+        </item>
+        <item name="jumpToEntryItem" command="dict.jumpToEntry" label="_Jump to entry">
+            <accelerator code="J" modifiers="mod alt" />
+        </item>
+        <separator />
+        <menu label="_New">
+            <item command="dict.newSame" label="One _after">
+                <accelerator code="ENTER" modifiers="mod" />
+            </item>
+            <item command="dict.addEntry" label="E_ntry">
+                <accelerator code="N" modifiers="mod alt" />
+            </item>
+            <item command="dict.newDefinition" label="_Definition group">
+                <accelerator code="ENTER" modifiers="mod alt" />
+            </item>
+            <item command="dict.newRelated" parameter="syn" label="_Synonym">
+                <accelerator code="S" modifiers="mod alt" />
+            </item>
+            <item command="dict.newRelated" parameter="ant" label="An_tonym">
+                <accelerator code="A" modifiers="mod alt" />
+            </item>
+            <item command="dict.newExample" label="_Example">
+                <accelerator code="E" modifiers="mod alt" />
+            </item>
+            <item command="dict.newIdiom" label="_Idiom">
+                <accelerator code="I" modifiers="mod alt" />
+            </item>
+            <item command="dict.newComment" label="_Comment">
+                <accelerator code="C" modifiers="mod alt" />
+            </item>
+        </menu>
+        <item command="dict.move" parameter="up" label="Move _up">
+            <accelerator code="UP" modifiers="alt" />
+        </item>
+        <item command="dict.move" parameter="down" label="Move do_wn">
+            <accelerator code="DOWN" modifiers="alt" />
+        </item>
+    </menu>
+</configuration>

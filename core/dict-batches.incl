@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Batches for the dictionaries that use them (batches = true in their
+  .toml file): going to the entries of a batch, opening batches.xml and
+  making a PDF of a batch. Included after dict.incl, whose menu it adds
+  to. batches.xml has its own configuration, batches.xxe.
+-->
+<configuration xmlns="http://www.xmlmind.com/xmleditor/schema/configuration"
+    xmlns:cfg="http://www.xmlmind.com/xmleditor/schema/configuration">
+
+    <!-- Ask for a batch number (the batch of the entry at the caret is
+       suggested), and pick one of the entries of that batch to go to. -->
+    <command name="dict.jumpToBatchEntry">
+        <macro label="Jump to entry in batch">
+            <sequence>
+                <!-- get the batch of the current e element -->
+                <get expression="string((($selected | $dot)/ancestor-or-self::e)[1]/@batch)" />
+                <command name="prompt"
+                    parameter="'Jump to entry in batch' 'Batch number, e.g. 2601:' '%_'" />
+                <set expression="%_" plainString="true" variable="batch" />
+                <choice>
+                    <sequence>
+                        <!-- check that the input is a 4 digit number -->
+                        <test
+                            expression="string-length(normalize-space($batch)) = 4 and translate(normalize-space($batch), '0123456789', '') = ''" />
+                        <choice>
+                            <command name="XXE.save" />
+                            <get expression="''" />
+                        </choice>
+                        <get expression="normalize-space($batch)" />
+                        <command name="dict.python" parameter="batch_goto.py %_" />
+                        <set expression="%_" plainString="true" variable="out" />
+                        <choice>
+                            <!-- script returned with no error -->
+                            <sequence>
+                                <test expression="not(starts-with(normalize-space($out), '!'))" />
+                                <get expression="resolve-uri('../.xxe/batch.txt', '%d')" />
+                                <command name="pick" parameter="'Go to' true @ '%_' UTF-8" />
+                                <command name="dict.goTo" parameter="%_" />
+                            </sequence>
+                            <!-- script returned with error -->
+                            <sequence>
+                                <test expression="starts-with(normalize-space($out), '!')" />
+                                <get expression="substring-after($out, '!')" />
+                                <command name="alert" parameter="[WARNING]%_" />
+                            </sequence>
+                        </choice>
+                    </sequence>
+                    <command name="alert" parameter="A batch number is four digits, e.g. 2601." />
+                </choice>
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Open batches.xml, which has its own config (batches.xxe) -->
+    <command name="dict.openBatches">
+        <macro label="Batches">
+            <sequence>
+                <get expression="resolve-uri('../batches/batches.xml', '%d')" />
+                <command name="XXE.edit" parameter="%_" />
+            </sequence>
+        </macro>
+    </command>
+
+    <!-- Buttons in XXE's toolbar (the ribbon), in a group of their own.
+         The icons are reused from XXE. -->
+    <toolBar>
+        <div label="Batches">
+            <button icon="xxe-config:common/mime_types/pdf.png" label="PDF of a batch"
+                toolTip="Make a PDF of a batch for proofreading">
+                <!-- defined in common.incl -->
+                <command name="dict.batchPdf" />
+            </button>
+            <button icon="xxe-config:common/mime_types/xml-blue.png" label="Open batches file"
+                toolTip="Open the file containing information about batches">
+                <command name="dict.openBatches" />
+            </button>
+        </div>
+    </toolBar>
+
+    <!-- added to the Dictionary menu of dict.incl, after "Jump to entry" -->
+    <menu label="-" insert="after jumpToEntryItem">
+        <item command="dict.jumpToBatchEntry" label="Jump to entry in _batch">
+            <accelerator code="B" modifiers="mod alt" />
+        </item>
+        <item command="dict.openBatches" label="Open batc_hes file" />
+    </menu>
+</configuration>

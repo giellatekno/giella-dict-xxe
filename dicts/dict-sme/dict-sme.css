@@ -1,0 +1,284 @@
+/*
+ * XMLmind XML Editor (XXE) style sheet for dict-sme.
+ * Made by make_config.py from dict-sme.toml: change that file and run make_config.py, do not edit this one.
+ */
+
+@import "../../core/dict.css";
+@import "../../core/dict-batches.css";
+
+/* --- pos ----------------------------------------------------------- */
+
+lg:before {
+  content: pos-field(
+    menu(
+      "A",
+      "putAttribute",
+      "pos A",
+      "N",
+      "putAttribute",
+      "pos N",
+      "V",
+      "putAttribute",
+      "pos V",
+      "Adv",
+      "putAttribute",
+      "pos Adv",
+      "Po",
+      "putAttribute",
+      "pos Po",
+      "Pr",
+      "putAttribute",
+      "pos Pr",
+      "Pron",
+      "putAttribute",
+      "pos Pron",
+      "Phrase",
+      "putAttribute",
+      "pos Phrase",
+      "Rel",
+      "putAttribute",
+      "pos Rel",
+      "Det",
+      "putAttribute",
+      "pos Det",
+      "Interj",
+      "putAttribute",
+      "pos Interj",
+      "Pcle",
+      "putAttribute",
+      "pos Pcle",
+      "Num",
+      "putAttribute",
+      "pos Num",
+      "CC",
+      "putAttribute",
+      "pos CC",
+      "CS",
+      "putAttribute",
+      "pos CS"
+    )
+  );
+}
+
+/* --- menus to change an attribute that is set ---------------------- */
+
+@property-value types-N() set-menu(menu("Prop", "putAttribute", "type Prop",
+    "NomAg", "putAttribute", "type NomAg",
+    "Coll", "putAttribute", "type Coll",
+    "ACR", "putAttribute", "type ACR",
+    "ABBR", "putAttribute", "type ABBR",
+    "G3", "putAttribute", "type G3",
+    "G7", "putAttribute", "type G7",
+    "", "", "",
+    "no type", "removeAttribute", "type"));
+@property-value types-A() set-menu(menu("Ord", "putAttribute", "type Ord",
+    "", "", "",
+    "no type", "removeAttribute", "type"));
+@property-value types-Pron() set-menu(menu("Pers", "putAttribute", "type Pers",
+    "Dem", "putAttribute", "type Dem",
+    "Indef", "putAttribute", "type Indef",
+    "Interr", "putAttribute", "type Interr",
+    "Recipr", "putAttribute", "type Recipr",
+    "Refl", "putAttribute", "type Refl",
+    "Rel", "putAttribute", "type Rel",
+    "", "", "",
+    "no type", "removeAttribute", "type"));
+
+/* --- menus of the attributes not set yet ---------------------------- */
+
+@property-value more-any-hid() more(menu("homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-N-type-hid() more(menu("type Prop", "putAttribute", "type Prop",
+    "type NomAg", "putAttribute", "type NomAg",
+    "type Coll", "putAttribute", "type Coll",
+    "type ACR", "putAttribute", "type ACR",
+    "type ABBR", "putAttribute", "type ABBR",
+    "type G3", "putAttribute", "type G3",
+    "type G7", "putAttribute", "type G7",
+    "", "", "",
+    "homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-N-hid() more(menu("homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-N-type() more(menu("type Prop", "putAttribute", "type Prop",
+    "type NomAg", "putAttribute", "type NomAg",
+    "type Coll", "putAttribute", "type Coll",
+    "type ACR", "putAttribute", "type ACR",
+    "type ABBR", "putAttribute", "type ABBR",
+    "type G3", "putAttribute", "type G3",
+    "type G7", "putAttribute", "type G7"));
+@property-value more-A-type-hid() more(menu("type Ord", "putAttribute", "type Ord",
+    "", "", "",
+    "homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-A-hid() more(menu("homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-A-type() more(menu("type Ord", "putAttribute", "type Ord"));
+@property-value more-Pron-type-hid() more(menu("type Pers", "putAttribute", "type Pers",
+    "type Dem", "putAttribute", "type Dem",
+    "type Indef", "putAttribute", "type Indef",
+    "type Interr", "putAttribute", "type Interr",
+    "type Recipr", "putAttribute", "type Recipr",
+    "type Refl", "putAttribute", "type Refl",
+    "type Rel", "putAttribute", "type Rel",
+    "", "", "",
+    "homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-Pron-hid() more(menu("homograph 1", "putAttribute", "hid 1",
+    "homograph 2", "putAttribute", "hid 2",
+    "homograph 3", "putAttribute", "hid 3",
+    "homograph 4", "putAttribute", "hid 4"));
+@property-value more-Pron-type() more(menu("type Pers", "putAttribute", "type Pers",
+    "type Dem", "putAttribute", "type Dem",
+    "type Indef", "putAttribute", "type Indef",
+    "type Interr", "putAttribute", "type Interr",
+    "type Recipr", "putAttribute", "type Recipr",
+    "type Refl", "putAttribute", "type Refl",
+    "type Rel", "putAttribute", "type Rel"));
+
+/* --- the lemma line ------------------------------------------------ */
+
+/* the rules for any pos, then those for each pos with types or
+   attributes of its own; see make_config.py for how they work */
+
+l:after {
+  content: more-any-hid() add-lemma();
+}
+
+l[type]:after {
+  content: "   type " value(attr(type))
+    remove-attribute-button(
+      attribute,
+      type,
+      color,
+      header-button-color(),
+      background-color,
+      header-button-background()
+    )
+    wrong-type() more-any-hid() add-lemma();
+}
+
+l[hid]:after {
+  content: hid-field() add-lemma();
+}
+
+l[type][hid]:after {
+  content: "   type " value(attr(type))
+    remove-attribute-button(
+      attribute,
+      type,
+      color,
+      header-button-color(),
+      background-color,
+      header-button-background()
+    )
+    wrong-type() hid-field() add-lemma();
+}
+
+lg[pos="N"] > l:after {
+  content: more-N-type-hid() add-lemma();
+}
+
+lg[pos="N"] > l[type]:after {
+  content: type-field(types-N()) wrong-type() more-N-hid() add-lemma();
+}
+
+lg[pos="N"] > l[type="Prop"]:after,
+lg[pos="N"] > l[type="NomAg"]:after,
+lg[pos="N"] > l[type="Coll"]:after,
+lg[pos="N"] > l[type="ACR"]:after,
+lg[pos="N"] > l[type="ABBR"]:after,
+lg[pos="N"] > l[type="G3"]:after,
+lg[pos="N"] > l[type="G7"]:after {
+  content: type-field(types-N()) more-N-hid() add-lemma();
+}
+
+lg[pos="N"] > l[hid]:after {
+  content: hid-field() more-N-type() add-lemma();
+}
+
+lg[pos="N"] > l[type][hid]:after {
+  content: type-field(types-N()) wrong-type() hid-field() add-lemma();
+}
+
+lg[pos="N"] > l[type="Prop"][hid]:after,
+lg[pos="N"] > l[type="NomAg"][hid]:after,
+lg[pos="N"] > l[type="Coll"][hid]:after,
+lg[pos="N"] > l[type="ACR"][hid]:after,
+lg[pos="N"] > l[type="ABBR"][hid]:after,
+lg[pos="N"] > l[type="G3"][hid]:after,
+lg[pos="N"] > l[type="G7"][hid]:after {
+  content: type-field(types-N()) hid-field() add-lemma();
+}
+
+lg[pos="A"] > l:after {
+  content: more-A-type-hid() add-lemma();
+}
+
+lg[pos="A"] > l[type]:after {
+  content: type-field(types-A()) wrong-type() more-A-hid() add-lemma();
+}
+
+lg[pos="A"] > l[type="Ord"]:after {
+  content: type-field(types-A()) more-A-hid() add-lemma();
+}
+
+lg[pos="A"] > l[hid]:after {
+  content: hid-field() more-A-type() add-lemma();
+}
+
+lg[pos="A"] > l[type][hid]:after {
+  content: type-field(types-A()) wrong-type() hid-field() add-lemma();
+}
+
+lg[pos="A"] > l[type="Ord"][hid]:after {
+  content: type-field(types-A()) hid-field() add-lemma();
+}
+
+lg[pos="Pron"] > l:after {
+  content: more-Pron-type-hid() add-lemma();
+}
+
+lg[pos="Pron"] > l[type]:after {
+  content: type-field(types-Pron()) wrong-type() more-Pron-hid() add-lemma();
+}
+
+lg[pos="Pron"] > l[type="Pers"]:after,
+lg[pos="Pron"] > l[type="Dem"]:after,
+lg[pos="Pron"] > l[type="Indef"]:after,
+lg[pos="Pron"] > l[type="Interr"]:after,
+lg[pos="Pron"] > l[type="Recipr"]:after,
+lg[pos="Pron"] > l[type="Refl"]:after,
+lg[pos="Pron"] > l[type="Rel"]:after {
+  content: type-field(types-Pron()) more-Pron-hid() add-lemma();
+}
+
+lg[pos="Pron"] > l[hid]:after {
+  content: hid-field() more-Pron-type() add-lemma();
+}
+
+lg[pos="Pron"] > l[type][hid]:after {
+  content: type-field(types-Pron()) wrong-type() hid-field() add-lemma();
+}
+
+lg[pos="Pron"] > l[type="Pers"][hid]:after,
+lg[pos="Pron"] > l[type="Dem"][hid]:after,
+lg[pos="Pron"] > l[type="Indef"][hid]:after,
+lg[pos="Pron"] > l[type="Interr"][hid]:after,
+lg[pos="Pron"] > l[type="Recipr"][hid]:after,
+lg[pos="Pron"] > l[type="Refl"][hid]:after,
+lg[pos="Pron"] > l[type="Rel"][hid]:after {
+  content: type-field(types-Pron()) hid-field() add-lemma();
+}

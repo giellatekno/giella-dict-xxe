@@ -1,0 +1,4 @@
+__pycache__/
+
+# weasyprint.exe on Windows, downloaded by install.py
+/tools/

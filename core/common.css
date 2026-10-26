@@ -1,0 +1,105 @@
+/*
+ * Shared by the style sheets of the add-on: dict.css (dictionary files)
+ * and batches.css (batches.xml). They import it with @import.
+ */
+
+/* ---------------------------------------------------------------------
+ * Colours: change them here.
+ * --------------------------------------------------------------------- */
+
+@property-value button-color() #2060a0;
+/* text of buttons */
+@property-value button-background() #e4eef8;
+@property-value header-button-color() #2060a0;
+@property-value header-button-background() #e8f0f8;
+/* buttons on the blue top of an entry: no fill (same as the band), blue text like a link */
+@property-value value-color() #000000;
+/* attribute values (batch, pos...) */
+@property-value label-color() #808080;
+/* faded labels (batch, syn, ex...) */
+@property-value lemma-color() #004080;
+/* lemma and dg numbers */
+@property-value link-color() #1a5fb4;
+/* d_ref and a */
+@property-value warning-color() #c00000;
+@property-value header-background() #e8f0f8;
+/* top of an entry: batch, pos, lemma */
+@property-value header-border() #a0b8d0;
+@property-value empty-background() #ffe0e0;
+/* a definition still to be written */
+@property-value comment-background() #fff8d0;
+@property-value comment-border() #e0d080;
+@property-value license-color() #404040;
+@property-value license-background() #f0f0f0;
+@property-value license-border() #c0c0c0;
+
+/* ---------------------------------------------------------------------
+ * Buttons
+ * --------------------------------------------------------------------- */
+
+/* action_ is what command-button() needs to know what to do: either
+   "command, ..., parameter, ..." or "menu, menu(...)" */
+/* Style keys must be longhand (border-top-left-radius, not border-radius).
+   line-height 1: otherwise the button gets the line-height of the page,
+   which makes it much taller than its text. More padding below than
+   above, since the font leaves room above the letters for accents, which
+   makes lowercase text look low. */
+@property-value styled-button(label_, action_, color_, background_) command-button(text, label_,
+  action_,
+  font-size, 8pt,
+  line-height, 1,
+  color, color_,
+  background-color, background_,
+  border-top-left-radius, 4px,
+  border-top-right-radius, 4px,
+  border-bottom-left-radius, 4px,
+  border-bottom-right-radius, 4px,
+  padding-top, 0px,
+  padding-bottom, 2px,
+  padding-left, 4px,
+  padding-right, 4px);
+
+@property-value button(label_, command_, parameter_) styled-button(label_, argument-list(command, command_, parameter, parameter_), button-color(), button-background());
+@property-value header-button(label_, command_, parameter_) styled-button(label_, argument-list(command, command_, parameter, parameter_), header-button-color(), header-button-background());
+
+/* an attribute value shown as text, followed by a button to change it */
+@property-value value(value_) text(value_, color, value-color(), font-size, 9pt) " ";
+/* only used on the top of an entry */
+@property-value set-menu(menu_) styled-button("\25BE", argument-list(menu, menu_), header-button-color(), header-button-background());
+
+/* a new element of the same kind, after the one the button is attached to */
+@property-value add-same(label_) button(label_, "insertNode", "sameElementAfter");
+
+/* a new group, after the element the button is attached to */
+/* a new dg gets the next free id: dict.addDg in dict.incl */
+@property-value add-dg() button("+ definition group", "dict.addDg", "");
+/* synonyms and antonyms are links: these buttons let the user pick the
+   entry, with commands from dict.incl */
+@property-value add-syng() button("+ synonyms", "dict.addRelatedGroup", "syng");
+@property-value add-antg() button("+ antonyms", "dict.addRelatedGroup", "antg");
+@property-value add-xg() button("+ examples", "insert", "after xg");
+@property-value add-ig() button("+ idiom", "insert", "after ig");
+@property-value add-idg() button("+ definition", "insert", "after idg");
+@property-value add-ix() button("+ example", "insert", "after ix");
+@property-value add-cg() button("+ comments", "insert", "after cg");
+
+/* A line of buttons below the element. XXE puts the generated content of
+   an element that has block children outside its margin, border and
+   padding, so such a line needs the margin of the element itself. */
+@property-group button-row(margin-left_) {
+  display: block;
+  font-weight: normal;
+  font-style: normal;
+  margin: 0.3ex 0 0.3ex margin-left_;
+}
+
+/* the groups of an entry are indented relative to the lemma */
+@property-value indent() 5ex;
+
+/* small grey text in front of an element, saying what it is */
+@property-group tag() {
+  font-size: 0.75em;
+  font-weight: normal;
+  font-style: normal;
+  color: label-color();
+}

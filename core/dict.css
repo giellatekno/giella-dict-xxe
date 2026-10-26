@@ -1,0 +1,484 @@
+/*
+ * XMLmind XML Editor (XXE) style sheet shared by all the dictionaries
+ * (dict-sme, dict-sma, ...). Follows their schema/dict-*.rnc.
+ *
+ * Each dictionary has a style sheet of its own in dicts/dict-xxx/, made by
+ * make_config.py from its .toml file, which imports this one and adds
+ * what differs between them: the pos and type values offered, and the
+ * attributes of a lemma. Batches (the batch of each entry) are in
+ * dict-batches.css, imported by the dictionaries that use them.
+ *
+ * "+ ..." buttons add an item to a group, or add a group that is missing.
+ * The synonym, antonym and definition group buttons use commands from
+ * dict.incl.
+ * A button is only shown where clicking it gives a valid document.
+ * To delete something, select it and press Delete.
+ *
+ * How the buttons work: clicking a button selects the element the button
+ * is attached to, and then inserts something right after that element.
+ * (Inserting *into* the selected element only works when it is empty, so
+ * that is not used.) Hence:
+ *   - the button adding an item to a group is attached to the last item;
+ *   - the button adding a missing group is attached to whatever element
+ *     the schema wants just before that group, which depends on which of
+ *     the other groups are there.
+ */
+
+@import "common.css";
+
+/* ---------------------------------------------------------------------
+ * Root and header
+ * --------------------------------------------------------------------- */
+
+r {
+  display: block;
+  font-family: sans-serif;
+  font-size: 12pt;
+  line-height: 1.3;
+  margin: 1ex;
+}
+
+lics {
+  display: block;
+  collapsible: yes;
+  collapsed: yes;
+  font-size: 0.85em;
+  color: license-color();
+  background-color: license-background();
+  border: 1px solid license-border();
+  padding: 0.5ex;
+  margin-bottom: 2ex;
+}
+
+lics:before {
+  display: block;
+  content: collapser() " License, attribution and source note";
+  font-weight: bold;
+}
+
+lic,
+ref,
+sourcenote {
+  display: block;
+  margin: 1ex 0 1ex 2ex;
+}
+
+lic {
+  white-space: pre;
+}
+
+lic:before,
+ref:before,
+sourcenote:before {
+  display: block;
+  font-weight: bold;
+  color: label-color();
+}
+
+lic:before {
+  content: "License";
+}
+
+ref:before {
+  content: "Attribution";
+}
+
+sourcenote:before {
+  content: "Source note";
+}
+
+a {
+  display: inline;
+  font-family: monospace;
+  color: link-color();
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------
+ * Entry: lg, dg*, ig*, cg?
+ * --------------------------------------------------------------------- */
+
+e {
+  display: block;
+  margin-bottom: 3ex;
+}
+
+e:after {
+  property-group: button-row(0);
+  content: button("+ entry", "dict.addEntry", "");
+}
+
+
+/* --- lemma group ----------------------------------------------------- */
+
+lg {
+  display: block;
+  background-color: header-background();
+  padding: 0 1ex 0.5ex 1ex;
+}
+
+/* An entry without dg (not valid, but it happens) gets the missing dg,
+   ig and cg after the lg... */
+lg:after {
+  property-group: button-row(indent());
+  content: add-dg() " " add-ig() " " add-cg();
+}
+
+e:contains-element(cg)>lg:after {
+  content: add-dg() " " add-ig();
+}
+
+e:contains-element(ig)>lg:after {
+  content: add-dg();
+}
+
+e:contains-element(dg)>lg:after {
+  display: inline;
+  content: "";
+}
+
+/* pos, on a line above the lemmas, and the type of each lemma after it,
+   with menu buttons; the menus and the rules for them are in the style
+   sheet of each dictionary, since the values differ.
+   The type is per lemma, since variants of a word can differ in it
+   (gássa N and gássa N G3). The schema allows any type with any pos. The
+   type menu only offers the types that go with the pos, and a type
+   that does not go with the pos is flagged. (Tying them together in the
+   schema would make XXE refuse to change the pos.) */
+
+@property-value pos-field(menu_) "pos " value(attr(pos)) set-menu(menu_);
+
+/* the pos line, the top of the entry; its content (pos-field() with the
+   menu of pos values) is in the style sheet of each dictionary */
+lg:before {
+  display: block;
+  property-group: tag();
+  background-color: header-background();
+  border-top: 2px solid header-border();
+  padding: 0.5ex 1ex 0 1ex;
+}
+
+/* homograph number of a lemma: different words spelled the same, with the
+   same pos and type */
+@property-value hid-field() "     homograph " value(attr(hid)) set-menu(menu("1", "putAttribute", "hid 1", "2", "putAttribute", "hid 2",
+    "3", "putAttribute", "hid 3", "4", "putAttribute", "hid 4",
+    "", "", "",
+    "not a homograph", "removeAttribute", "hid"));
+
+@property-value type-field(types_) "   type " value(attr(type)) types_;
+
+@property-value wrong-type() text("   this type does not go with this pos", color, warning-color());
+
+/* Type and homograph number are rarely used, so they are only shown when
+   they are set. Those not set yet are offered by one small button at the
+   end of the lemma line: types that go with the pos, then homograph
+   numbers. Since a menu cannot be put together from parts, there is one
+   for each pos and for what is not set yet. */
+@property-value more(menu_) "   " styled-button("\22EF", argument-list(menu, menu_), header-button-color(), header-button-background());
+
+/* "+ lemma" ends every lemma line */
+@property-value add-lemma() "   " header-button("+ lemma", "insertNode", "sameElementAfter");
+
+l {
+  display: block;
+  font-size: 1.4em;
+  font-weight: bold;
+  color: lemma-color();
+}
+
+/* the default for the lemma line; the style sheet of each dictionary has
+   the rules for the attributes of its lemmas */
+l:after {
+  content: add-lemma();
+  font-size: 0.55em;
+  font-weight: normal;
+  color: label-color();
+}
+
+/* --- definition group: d+, syng*, antg*, xg* ------------------------- */
+
+dg {
+  display: block;
+  margin: 1ex 0 1ex indent();
+}
+
+dg:before {
+  display: marker;
+  content: simple-counter(n, decimal);
+  font-weight: bold;
+  color: lemma-color();
+}
+
+dg:after {
+  property-group: button-row(indent());
+  content: add-dg();
+}
+
+/* ...and otherwise after the last dg... */
+e>dg:last-of-type:after {
+  content: add-dg() " " add-ig() " " add-cg();
+}
+
+e:contains-element(cg)>dg:last-of-type:after {
+  content: add-dg() " " add-ig();
+}
+
+e:contains-element(ig)>dg:last-of-type:after {
+  content: add-dg();
+}
+
+/* the definitions of a group are on one line, separated by "; " */
+d {
+  display: inline;
+}
+
+d+d:before {
+  content: "; ";
+}
+
+/* With the XXE configuration, a new dg gets the next free id by
+   itself. Without it, a dg can get id="???"; the id is normally not shown,
+   but then it is, in place of the number, with the ids already used in the
+   entry so a free one can be chosen. */
+dg[id="???"]:before {
+  display: block;
+  margin-left: 6.7ex;
+  /* indent() at the smaller font size of tag() */
+  content: "id " text-field(attribute, id, columns, 3) text("  choose an id not used in this entry (", color, warning-color()) xpath("join(../dg/@id[. != '???'], ', ')") text(")", color, warning-color());
+  property-group: tag();
+}
+
+/* a definition that still has to be written */
+d:empty {
+  background-color: empty-background();
+}
+
+/* A line break in generated content. XXE draws a mark where the line is
+   broken; white text hides it. */
+@property-value new-line() text("\A", color, white);
+
+/* missing syng, antg and xg are added after the last d, on a line of
+   their own... */
+dg>d:last-of-type:after {
+  content: "   " add-same("+ definition") new-line() add-syng() " " add-antg() " " add-xg();
+}
+
+dg:contains-element(xg)>d:last-of-type:after {
+  content: "   " add-same("+ definition") new-line() add-syng() " " add-antg();
+}
+
+dg:contains-element(antg)>d:last-of-type:after {
+  content: "   " add-same("+ definition") new-line() add-syng();
+}
+
+dg:contains-element(syng)>d:last-of-type:after {
+  content: "   " add-same("+ definition");
+}
+
+/* A link: only the linked word is shown. What it points to is in the
+   Attributes tool of XXE, which shows it when the caret is in the link.
+   To type after a link that ends the definition, put the caret in the
+   link and press Insert (F1 on a Mac). */
+d_ref {
+  display: inline;
+  color: link-color();
+  text-decoration: underline;
+}
+
+/* --- synonyms and antonyms ------------------------------------------- */
+
+syng,
+antg {
+  display: block;
+}
+
+syng:before,
+antg:before {
+  property-group: tag();
+}
+
+syng:before {
+  content: "syn ";
+}
+
+antg:before {
+  content: "ant ";
+}
+
+/* the comma and the button are part of the d_ref: not underlined */
+syng>d_ref:before,
+antg>d_ref:before,
+syng>d_ref:after,
+antg>d_ref:after {
+  text-decoration: none;
+  color: value-color();
+}
+
+syng>d_ref+d_ref:before,
+antg>d_ref+d_ref:before {
+  content: ", ";
+}
+
+syng>d_ref:last-child:after {
+  content: "   " button("+ synonym", "dict.addRelated", "");
+}
+
+antg>d_ref:last-child:after {
+  content: "   " button("+ antonym", "dict.addRelated", "");
+}
+
+/* ...except that antg must come after syng, and xg after both; again on
+   a line of their own */
+syng:after {
+  content: new-line() add-antg() " " add-xg();
+}
+
+dg:contains-element(xg)>syng:after {
+  content: new-line() add-antg();
+}
+
+dg:contains-element(antg)>syng:after {
+  content: "";
+}
+
+antg:after {
+  content: new-line() add-xg();
+}
+
+dg:contains-element(xg)>antg:after {
+  content: "";
+}
+
+/* --- examples -------------------------------------------------------- */
+
+xg {
+  display: block;
+  margin-top: 0.5ex;
+}
+
+x {
+  display: block;
+  font-style: italic;
+}
+
+x:before {
+  property-group: tag();
+  content: "ex ";
+}
+
+x:last-child:after {
+  property-group: button-row(0);
+  content: add-same("+ example");
+}
+
+/* --- idiom group: i, idg* (one idiom per ig) ------------------------
+   idg: one definition of the idiom (id) with its examples (ix*) */
+
+ig {
+  display: block;
+  margin: 1ex 0 1ex indent();
+}
+
+e>ig:first-of-type:before {
+  display: block;
+  content: "Idioms";
+  font-weight: bold;
+  color: label-color();
+  margin: 1.5ex 0 0 indent();
+}
+
+i {
+  display: block;
+  font-weight: bold;
+}
+
+idg {
+  display: block;
+  margin: 0.3ex 0 0.3ex 3ex;
+}
+
+idg:before {
+  display: marker;
+  content: simple-counter(n, decimal);
+  font-size: 0.85em;
+  color: lemma-color();
+}
+
+id {
+  display: block;
+}
+
+ix {
+  display: block;
+  font-style: italic;
+}
+
+ix:before {
+  property-group: tag();
+  content: "ex ";
+}
+
+/* the first idg is added after the i... */
+i:after {
+  property-group: button-row(3ex);
+  content: add-idg();
+}
+
+ig:contains-element(idg)>i:after {
+  display: inline;
+  content: "";
+}
+
+/* ...and further ones after the last idg */
+ig>idg:last-of-type:after {
+  property-group: button-row(3ex);
+  content: add-same("+ definition");
+}
+
+/* the first ix of a definition is added after its id, more after the
+   last ix */
+id:after {
+  property-group: button-row(0);
+  content: add-ix();
+}
+
+idg:contains-element(ix)>id:after {
+  display: inline;
+  content: "";
+}
+
+ix:last-of-type:after {
+  property-group: button-row(0);
+  content: add-same("+ example");
+}
+
+/* ...except that cg must come after ig when there is one */
+e>ig:last-of-type:after {
+  property-group: button-row(indent());
+  content: add-same("+ idiom") " " add-cg();
+}
+
+e:contains-element(cg)>ig:last-of-type:after {
+  content: add-same("+ idiom");
+}
+
+/* --- comments -------------------------------------------------------- */
+
+cg {
+  display: block;
+  margin: 1.5ex 0 0 indent();
+  padding: 0.5ex 1ex;
+  background-color: comment-background();
+  border: 1px solid comment-border();
+  border-radius: 0.5ex;
+}
+
+c {
+  display: block;
+  font-size: 0.9em;
+}
+
+c:last-child:after {
+  property-group: button-row(0);
+  content: add-same("+ comment");
+}
